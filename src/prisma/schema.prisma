@@ -1,0 +1,174 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String
+  email         String     @unique
+  password      String
+  role          Role       @default(VIEWER)
+  isActive      Boolean    @default(true)
+  lastLogin     DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  activities    Activity[]
+}
+
+enum Role {
+  ADMIN
+  IT_MANAGER
+  TECHNICIAN
+  VIEWER
+}
+
+model Device {
+  id               String         @id @default(cuid())
+  assetTag         String         @unique
+  name             String
+  type             DeviceType
+  brand            String
+  model            String?
+  serialNumber     String?        @unique
+  embossmentNumber String?
+  processor        String?
+  generation       String?
+  department       String
+  location         String
+  ward             String?
+  description      String?
+  remarks          DeviceCondition @default(WORKING)
+  status           DeviceStatus    @default(ACTIVE)
+  purchaseDate     DateTime?
+  warrantyExpiry   DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  transfers       Transfer[]
+  incidents       Incident[]
+  maintenanceLogs MaintenanceLog[]
+  routineChecks   RoutineCheck[]
+  activities      Activity[]
+}
+
+enum DeviceType {
+  DESKTOP
+  LAPTOP
+  TABLET
+  PRINTER
+  ROUTER
+  SWITCH
+  SERVER
+  CCTV
+  TELEPHONE
+  UPS
+  WIRELESS_TRANSMITTER
+  MONITOR
+  KEYBOARD
+  MOUSE
+  OTHER
+}
+
+enum DeviceCondition {
+  WORKING
+  SPOILT
+  STOLEN
+  LOST
+  UNDER_REPAIR
+  DECOMMISSIONED
+}
+
+enum DeviceStatus {
+  ACTIVE
+  TRANSFERRED
+  ARCHIVED
+}
+
+model Transfer {
+  id             String   @id @default(cuid())
+  deviceId       String
+  device         Device   @relation(fields: [deviceId], references: [id])
+  fromDepartment String
+  toDepartment   String
+  fromLocation   String
+  toLocation     String
+  toWard         String?
+  transferredBy  String
+  notes          String?
+  createdAt      DateTime @default(now())
+}
+
+model Incident {
+  id         String         @id @default(cuid())
+  deviceId   String
+  device     Device         @relation(fields: [deviceId], references: [id])
+  department String
+  location   String
+  ward       String?
+  notes      String
+  remarks    String?
+  reportedBy String
+  resolvedBy String?
+  resolvedAt DateTime?
+  status     IncidentStatus @default(OPEN)
+  createdAt  DateTime       @default(now())
+}
+
+enum IncidentStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model MaintenanceLog {
+  id          String   @id @default(cuid())
+  deviceId    String
+  device      Device   @relation(fields: [deviceId], references: [id])
+  department  String
+  location    String
+  notes       String
+  remarks     String?
+  performedBy String
+  cost        Float?
+  createdAt   DateTime @default(now())
+}
+
+model RoutineCheck {
+  id         String   @id @default(cuid())
+  deviceId   String
+  device     Device   @relation(fields: [deviceId], references: [id])
+  department String
+  location   String
+  notes      String
+  checkedBy  String
+  createdAt  DateTime @default(now())
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  deviceId  String?
+  device    Device?  @relation(fields: [deviceId], references: [id])
+  action    String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+// ✅ Setting model moved here from the route file
+model Setting {
+  id        String   @id @default(cuid())
+  category  String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([category, value])
+}
