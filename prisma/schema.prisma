@@ -7,111 +7,165 @@ datasource db {
   provider = "postgresql"
 }
 
-model cart_items {
-  cart_id    Int
-  product_id Int
-  quantity   Int
-  id         Int      @id @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @db.Timestamptz(6)
-  carts      carts    @relation(fields: [cart_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+model User {
+  id         String     @id @default(cuid())
+  name       String
+  email      String     @unique
+  password   String
+  role       Role       @default(VIEWER)
+  isActive   Boolean    @default(true)
+  lastLogin  DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  activities Activity[]
 }
 
-model carts {
-  user_id    Int          @unique
-  id         Int          @id @default(autoincrement())
-  created_at DateTime     @default(now()) @db.Timestamptz(6)
-  updated_at DateTime     @default(now()) @db.Timestamptz(6)
-  cart_items cart_items[]
-  users      users        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model categories {
-  name       String   @unique @db.VarChar(100)
-  id         Int      @id @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @db.Timestamptz(6)
-}
-
-model order_items {
-  order_id              Int
-  product_id            Int
-  quantity              Int
-  product_name_snapshot String   @db.VarChar(255)
-  price_snapshot        Decimal  @db.Decimal(10, 2)
-  id                    Int      @id @default(autoincrement())
-  created_at            DateTime @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime @default(now()) @db.Timestamptz(6)
-  orders                orders   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  products              products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model orders {
-  user_id      Int
-  status       orderstatus
-  total_amount Decimal       @db.Decimal(10, 2)
-  id           Int           @id @default(autoincrement())
-  created_at   DateTime      @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime      @default(now()) @db.Timestamptz(6)
-  order_items  order_items[]
-  users        users         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model product_images {
-  product_id Int
-  image_url  String   @db.VarChar(500)
-  sort_order Int
-  is_primary Boolean
-  id         Int      @id @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @db.Timestamptz(6)
-  products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model products {
-  name           String           @db.VarChar(250)
-  price          Int
-  id             Int              @id @default(autoincrement())
-  is_sale        Boolean?         @default(false)
-  inventory      Int              @default(0)
-  created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  cart_items     cart_items[]
-  order_items    order_items[]
-  product_images product_images[]
-}
-
-model users {
-  email         String   @unique @db.VarChar(250)
-  password_hash String   @db.VarChar(250)
-  role          role
-  full_name     String   @db.VarChar(250)
-  phone         String?  @db.VarChar(10)
-  address       String?  @db.VarChar(100)
-  id            Int      @id @default(autoincrement())
-  created_at    DateTime @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime @default(now()) @db.Timestamptz(6)
-  carts         carts?
-  orders        orders[]
-}
-
-enum orderstatus {
-  PENDING
-  COMPLETED
-  PAID
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
-
-enum role {
-  CUSTOMER
-  OWNER
+enum Role {
   ADMIN
+  IT_MANAGER
+  TECHNICIAN
+  VIEWER
 }
 
-enum userroles {
-  ADMIN
-  OWNER
-  USER
+model Device {
+  id               String          @id @default(cuid())
+  assetTag         String          @unique
+  name             String
+  type             DeviceType
+  brand            String
+  model            String?
+  serialNumber     String?         @unique
+  embossmentNumber String?
+  processor        String?
+  generation       String?
+  department       String
+  location         String
+  ward             String?
+  description      String?
+  remarks          DeviceCondition @default(WORKING)
+  status           DeviceStatus    @default(ACTIVE)
+  purchaseDate     DateTime?
+  warrantyExpiry   DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  transfers        Transfer[]
+  incidents        Incident[]
+  maintenanceLogs  MaintenanceLog[]
+  routineChecks    RoutineCheck[]
+  activities       Activity[]
+}
+
+enum DeviceType {
+  DESKTOP
+  LAPTOP
+  TABLET
+  PRINTER
+  ROUTER
+  SWITCH
+  SERVER
+  CCTV
+  TELEPHONE
+  UPS
+  WIRELESS_TRANSMITTER
+  MONITOR
+  KEYBOARD
+  MOUSE
+  OTHER
+}
+
+enum DeviceCondition {
+  WORKING
+  SPOILT
+  STOLEN
+  LOST
+  UNDER_REPAIR
+  DECOMMISSIONED
+}
+
+enum DeviceStatus {
+  ACTIVE
+  TRANSFERRED
+  ARCHIVED
+}
+
+model Transfer {
+  id             String   @id @default(cuid())
+  deviceId       String
+  device         Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  fromDepartment String
+  toDepartment   String
+  fromLocation   String
+  toLocation     String
+  toWard         String?
+  transferredBy  String
+  notes          String?
+  createdAt      DateTime @default(now())
+}
+
+model Incident {
+  id         String         @id @default(cuid())
+  deviceId   String
+  device     Device         @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  department String
+  location   String
+  ward       String?
+  notes      String
+  remarks    String?
+  reportedBy String
+  resolvedBy String?
+  resolvedAt DateTime?
+  status     IncidentStatus @default(OPEN)
+  createdAt  DateTime       @default(now())
+}
+
+enum IncidentStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model MaintenanceLog {
+  id          String   @id @default(cuid())
+  deviceId    String
+  device      Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  department  String
+  location    String
+  notes       String
+  remarks     String?
+  performedBy String
+  cost        Float?
+  createdAt   DateTime @default(now())
+}
+
+model RoutineCheck {
+  id         String   @id @default(cuid())
+  deviceId   String
+  device     Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  department String
+  location   String
+  notes      String
+  checkedBy  String
+  createdAt  DateTime @default(now())
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId  String?
+  device    Device?  @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  action    String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  category  String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([category, value])
 }

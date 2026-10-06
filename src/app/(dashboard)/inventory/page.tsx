@@ -18,29 +18,41 @@ interface DepartmentStats {
   }[]
 }
 
+interface InventoryDevice {
+  id: string
+  department: string
+  name: string
+  location: string
+  ward: string | null
+  type: string
+  remarks: string
+}
+
 export default async function InventoryPage() {
-  const devices = await prisma.device.findMany({
+  const devices: InventoryDevice[] = await prisma.device.findMany({
     orderBy: [{ department: "asc" }, { type: "asc" }],
   })
 
-  // ✅ Explicitly typed accumulator
-  const byDepartment = devices.reduce<Record<string, DepartmentStats>>((acc, d) => {
-    if (!acc[d.department]) {
-      acc[d.department] = { total: 0, working: 0, spoilt: 0, items: [] }
-    }
-    acc[d.department].total++
-    if (d.remarks === "WORKING") acc[d.department].working++
-    if (d.remarks === "SPOILT") acc[d.department].spoilt++
-    acc[d.department].items.push({
-      id: d.id,
-      name: d.name,
-      location: d.location,
-      ward: d.ward,
-      type: d.type,
-      remarks: d.remarks,
-    })
-    return acc
-  }, {})
+  const byDepartment = devices.reduce<Record<string, DepartmentStats>>(
+    (acc: Record<string, DepartmentStats>, d: InventoryDevice) => {
+      if (!acc[d.department]) {
+        acc[d.department] = { total: 0, working: 0, spoilt: 0, items: [] }
+      }
+      acc[d.department].total++
+      if (d.remarks === "WORKING") acc[d.department].working++
+      if (d.remarks === "SPOILT") acc[d.department].spoilt++
+      acc[d.department].items.push({
+        id: d.id,
+        name: d.name,
+        location: d.location,
+        ward: d.ward,
+        type: d.type,
+        remarks: d.remarks,
+      })
+      return acc
+    },
+    {}
+  )
 
   const totalDevices = devices.length
   const totalWorking = devices.filter((d) => d.remarks === "WORKING").length

@@ -27,13 +27,20 @@ const deviceSchema = z.object({
   remarks: z.string().default("WORKING"),
 })
 
-type DeviceFormData = z.infer<typeof deviceSchema>
+type DeviceFormData = z.input<typeof deviceSchema>
 
 export default function NewDevicePage() {
   const router = useRouter()
   const form = useForm<DeviceFormData>({
     resolver: zodResolver(deviceSchema),
-    defaultValues: { remarks: "WORKING" },
+    defaultValues: {
+      name: "",
+      type: "",
+      brand: "",
+      department: "",
+      location: "",
+      remarks: "WORKING",   // ← default here instead
+    },
   })
 
   const onSubmit = async (data: DeviceFormData) => {
