@@ -128,3 +128,29 @@
     @apply font-sans;
   }
 }
+
+
+@media print {
+  /* Hide everything except the report table */
+  aside, header, nav, button, .print\:hidden {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    background: white !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+  table {
+    font-size: 10px !important;
+  }
+  th, td {
+    padding: 4px 6px !important;
+  }
+}

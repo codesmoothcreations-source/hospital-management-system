@@ -1,4 +1,5 @@
 // src/app/(dashboard)/layout.tsx
+import { SettingsPrefetcher } from "@/components/providers/prefetch"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Topbar } from "@/components/layout/topbar"
 import { auth } from "@/lib/auth"
@@ -17,6 +18,7 @@ export default async function DashboardLayout({
       <Sidebar role={(session.user as any).role} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar user={session.user} />
+        <SettingsPrefetcher />
         <main className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-950">
           {children}
         </main>

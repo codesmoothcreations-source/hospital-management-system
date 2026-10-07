@@ -4,8 +4,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
-  LayoutDashboard, Monitor, ArrowRightLeft, AlertTriangle, Package,
-  Wrench, FileText, Users, Settings, ChevronLeft, ChevronRight,
+  LayoutDashboard, Monitor, ArrowRightLeft, AlertTriangle, Activity, Package,
+  Wrench, FileText, Users, Settings, ChevronLeft, ChevronRight, List,
+  Shield
 } from "lucide-react"
 import { useState } from "react"
 
@@ -14,10 +15,13 @@ const navItems = [
   { href: "/inventory", label: "Inventory", icon: Package },
   { href: "/devices", label: "Devices", icon: Monitor },
   { href: "/transfers", label: "Transfers", icon: ArrowRightLeft },
+  { href: "/transfers/list", label: "Transfer History", icon: List },
   { href: "/incidents", label: "Incidents", icon: AlertTriangle },
   { href: "/maintenance", label: "Maintenance", icon: Wrench },
+    { href: "/activities", label: "Activity Log", icon: Activity },
   { href: "/reports", label: "Reports", icon: FileText },
   { href: "/users", label: "Users", icon: Users, roles: ["ADMIN"] },
+  { href: "/users", label: "Users", icon: Shield, roles: ["ADMIN"] },
   { href: "/settings", label: "Settings", icon: Settings, roles: ["ADMIN"] },
 ]
 

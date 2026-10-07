@@ -99,7 +99,16 @@ model Transfer {
   toWard         String?
   transferredBy  String
   notes          String?
+  status         TransferStatus @default(PENDING)
   createdAt      DateTime @default(now())
+}
+
+enum TransferStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DIFFICULTY
+  CANCELLED
 }
 
 model Incident {

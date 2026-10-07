@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     where,
     orderBy: { createdAt: "desc" },
     include: {
-      device: { select: { name: true, assetTag: true, type: true } },
+      device: { select: { name: true, assetTag: true, type: true, department: true, location: true } },
     },
   })
 
@@ -26,26 +26,41 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const body = await req.json()
+  const { deviceId, department, location, ward, notes, remarks } = body
+
+  if (!deviceId || !notes || !remarks) {
+    return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+  }
 
   const incident = await prisma.incident.create({
     data: {
-      deviceId: body.deviceId,
-      department: body.department,
-      location: body.location,
-      ward: body.ward,
-      notes: body.notes,
-      remarks: body.remarks,
-      reportedBy: (session.user as any).name,
+      deviceId,
+      department,
+      location,
+      ward: ward || null,
+      notes,
+      remarks,
+      reportedBy: (session.user as any).name ?? "Unknown",
+      status: "OPEN",
     },
   })
 
-  // Update device condition
-  if (body.remarks === "SPOILT" || body.remarks === "STOLEN" || body.remarks === "LOST") {
+  // Update device condition based on incident type
+  if (remarks === "SPOILT" || remarks === "STOLEN" || remarks === "LOST") {
     await prisma.device.update({
-      where: { id: body.deviceId },
-      data: { remarks: body.remarks },
+      where: { id: deviceId },
+      data: { remarks: remarks as any },
     })
   }
+
+  await prisma.activity.create({
+    data: {
+      userId: (session.user as any).id,
+      deviceId,
+      action: "INCIDENT_REPORTED",
+      details: `${remarks} incident: ${notes}`,
+    },
+  })
 
   return NextResponse.json(incident, { status: 201 })
 }
